@@ -15,7 +15,6 @@
 
   home.packages =
     (with pkgs; [
-      git
       neovim
       zsh
       gcc
@@ -81,6 +80,11 @@
   ];
 
   programs.home-manager.enable = true;
+
+  programs.git = {
+    enable = true;
+    lfs.enable = true;
+  };
 
   programs.gh = {
     enable = true;
@@ -160,7 +164,10 @@
           abbr -S zp="peco-zoxide"
         '';
       in
-      lib.mkMerge [ zshConfigEarlyInit zshConfig ];
+      lib.mkMerge [
+        zshConfigEarlyInit
+        zshConfig
+      ];
 
     zsh-abbr = {
       enable = true;
@@ -175,11 +182,13 @@
         up = "cd ../";
         cl = "clear";
 
-        re = if isDarwin
-          then "home-manager switch --flake /etc/nixos#darwin"
-          else "sudo nixos-rebuild switch --flake /etc/nixos#nixos";
+        re =
+          if isDarwin then
+            "home-manager switch --flake /etc/nixos#darwin"
+          else
+            "sudo nixos-rebuild switch --flake /etc/nixos#nixos";
 
-        gcm = ''git commit -m "%"'';
+        gcm = ''git commit -S -m "%"'';
       };
     };
 
@@ -195,4 +204,3 @@
     };
   };
 }
-
