@@ -32,6 +32,7 @@
     openssl
     icu
     krb5
+    wget
   ];
 
   nixpkgs.config.allowUnsupportedSystem = true;

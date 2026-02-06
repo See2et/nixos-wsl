@@ -10,8 +10,8 @@
     };
 
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
-
     rust-overlay.url = "github:oxalica/rust-overlay";
+    codex-cli-nix.url = "github:sadjow/codex-cli-nix";
   };
 
   outputs =
@@ -21,6 +21,7 @@
       home-manager,
       nixos-wsl,
       rust-overlay,
+      codex-cli-nix,
       ...
     }:
     let
@@ -99,6 +100,7 @@
             home-manager.users.nixos = import ./home.nix;
 
             home-manager.extraSpecialArgs = {
+              inherit inputs;
               isDarwin = false;
               rustToolchain = rustLinux;
             };
@@ -111,6 +113,7 @@
           pkgs = pkgsLinux;
           modules = [ ./home.nix ];
           extraSpecialArgs = {
+            inherit inputs;
             isDarwin = false;
             rustToolchain = rustLinux;
           };
@@ -120,6 +123,7 @@
           pkgs = pkgsDarwin;
           modules = [ ./home.nix ];
           extraSpecialArgs = {
+            inherit inputs;
             isDarwin = true;
             rustToolchain = rustDarwin;
           };

@@ -5,6 +5,7 @@
   rustToolchain,
   lib,
   isDarwin,
+  inputs,
   ...
 }:
 {
@@ -27,7 +28,6 @@
       ghq
       lazygit
       zellij
-      codex
       zenn-cli
       peco
       zoxide
@@ -46,7 +46,10 @@
       yubikey-manager
       wget # for VSCode Server
     ])
-    ++ [ rustToolchain ];
+    ++ [
+      rustToolchain
+      inputs.codex-cli-nix.packages.${pkgs.system}.codex-node
+    ];
 
   home.file = {
     ".gitconfig".source = ./.gitconfig;
@@ -72,6 +75,9 @@
     EDITOR = "nvim";
     UV_TOOL_DIR = "$XDG_DATA_HOME/uv/tools";
     UV_TOOL_BIN_DIR = "$XDG_DATA_HOME/uv/tools/bin";
+    PATH = ''
+      $PATH:/mnt/c/Users/See2et/AppData/Local/Programs/Microsoft\ VS\ Code/bin
+    '';
   };
 
   home.sessionPath = [
