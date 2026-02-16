@@ -316,7 +316,7 @@
                 --border --border-label ' 🌴 Worktree ' --border-label-pos=2 \
                 --color 'label:green,header:italic:dim' \
                 --prompt 'WORKTREE> ' \
-                --header $'Enter: switch │ Ctrl-N: new branch │ Ctrl-D: delete │ Ctrl-/: toggle preview' \
+                --header $'Enter: switch │ Ctrl-A: new branch │ Ctrl-D: delete │ Ctrl-/: toggle preview' \
                 --delimiter=$'\t' \
                 --with-nth=1,2 \
                 --preview "$_gwt_preview" \
@@ -324,7 +324,7 @@
                 --bind 'ctrl-/:change-preview-window(down,40%|hidden|right,50%)' \
                 --bind 'ctrl-k:up,ctrl-j:down' \
                 --bind "ctrl-d:execute-silent($_gwt_delete)+reload($_gwt_reload)" \
-                --expect=ctrl-n \
+                --expect=ctrl-a \
                 --print-query \
             ) || return
 
@@ -333,7 +333,7 @@
             selected=$(printf "%s\n" "$result" | sed -n '3p' | awk -F $'\t' '{print $2}' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 
             case "$key" in
-              ctrl-n)
+              ctrl-a)
                 branch="$query"
                 [[ -z "$branch" ]] && return
                 ;;
