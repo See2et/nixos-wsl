@@ -68,6 +68,7 @@
       executable = true;
     };
     ".config/opencode/opencode.jsonc".source = ./opencode/opencode.jsonc;
+    ".config/opencode/AGENTS.md".source = ./opencode/AGENTS.md;
   };
 
   xdg.configFile = {
