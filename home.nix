@@ -44,6 +44,7 @@
       wl-clipboard
       xclip
       ffmpeg
+      libnotify
       fzf
       markdownlint-cli2
       yubikey-manager
@@ -73,6 +74,13 @@
     ".config/opencode/AGENTS.md".source = ./opencode/AGENTS.md;
     ".config/opencode/themes/tokyonight-transparent.json".source =
       ./opencode/themes/tokyonight-transparent.json;
+  }
+  // lib.optionalAttrs (!isDarwin) {
+    ".config/opencode/opencode-notifier.json".source = ./opencode/opencode-notifier.json;
+    ".local/bin/opencode-wsl-notify" = {
+      source = ./opencode/opencode-wsl-notify;
+      executable = true;
+    };
   };
 
   xdg.configFile = {
