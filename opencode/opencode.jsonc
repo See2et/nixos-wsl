@@ -14,12 +14,14 @@
         "serena",
         "start-mcp-server",
         "--context",
-        "ide-assistant",
+        "claude-code",
         "--project",
         "{cwd}"
       ],
       "environment": {
-        "PYTHONUNBUFFERED": "1"
+        "PYTHONUNBUFFERED": "1",
+        "UV_TOOL_DIR": "{env:HOME}/.local/share/uv/tools",
+        "UV_TOOL_BIN_DIR": "{env:HOME}/.local/share/uv/tools/bin"
       }
     },
     "context7": {
