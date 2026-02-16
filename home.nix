@@ -50,7 +50,8 @@
     ])
     ++ [
       rustToolchain
-      inputs.codex-cli-nix.packages.${pkgs.system}.codex-node
+      inputs.codex-cli-nix.packages.${pkgs.stdenv.hostPlatform.system}.codex-node
+      inputs.opencode.packages.${pkgs.stdenv.hostPlatform.system}.opencode
     ];
 
   home.file = {

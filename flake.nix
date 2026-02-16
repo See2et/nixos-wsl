@@ -12,6 +12,7 @@
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     rust-overlay.url = "github:oxalica/rust-overlay";
     codex-cli-nix.url = "github:sadjow/codex-cli-nix";
+    opencode.url = "github:albertov/opencode/dev";
   };
 
   outputs =
@@ -22,6 +23,7 @@
       nixos-wsl,
       rust-overlay,
       codex-cli-nix,
+      opencode,
       ...
     }:
     let
