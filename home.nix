@@ -1,4 +1,4 @@
-# /etc/nixos/home.nix  (統合後の正本)
+# /etc/nixos/home.nix  (統合後の正本)home
 {
   config,
   pkgs,
@@ -67,6 +67,7 @@
       source = ./yubikey-setup.sh;
       executable = true;
     };
+    ".config/opencode/opencode.jsonc".source = ./opencode/opencode.jsonc;
   };
 
   xdg.configFile = {
