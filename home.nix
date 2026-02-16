@@ -180,19 +180,13 @@
           }
           abbr -S zp="peco-zoxide"
 
-          function fzf-git-worktree() {
-            local git_common_dir main_repo ghq_root repo_path worktree_repo_root
-            local branches branch branch_list wt_path result query key selected
-            local remote_url
-            local fzf_default_opts
+          function __fzf_gwt_resolve_repo() {
+            local git_common_dir main_repo ghq_root repo_path remote_url
 
-            git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || {
-              print -u2 "fzf-git-worktree: not in a git repository"
-              return 1
-            }
+            git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || return 1
 
             if [[ "$git_common_dir" == ".git" ]]; then
-              main_repo=$(git rev-parse --show-toplevel 2>/dev/null) || return
+              main_repo=$(git rev-parse --show-toplevel 2>/dev/null) || return 1
             else
               main_repo="''${git_common_dir%/.git}"
             fi
@@ -209,8 +203,12 @@
               fi
             fi
 
-            worktree_repo_root="$HOME/worktrees/$repo_path"
-            mkdir -p "$worktree_repo_root"
+            printf "%s\n%s" "$main_repo" "$HOME/worktrees/$repo_path"
+          }
+
+          function __fzf_gwt_list() {
+            local main_repo="$1" worktree_repo_root="$2"
+            local branches branch wt_path
 
             branches=$(git -C "$main_repo" for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin | sed 's#^origin/##' | sort -u)
 
@@ -218,22 +216,90 @@
               [[ -z "$branch" ]] && continue
               wt_path="$worktree_repo_root/''${branch//\//-}"
               if [[ -d "$wt_path" ]]; then
-                branch_list+="''${branch}"$'\t'"[worktree: ''${wt_path}]"$'\n'
+                printf "\033[32m●\033[0m\t%-40s\t\033[2m%s\033[0m\n" "$branch" "$wt_path"
               else
-                branch_list+="''${branch}"$'\n'
+                printf "\033[90m○\033[0m\t%-40s\t\n" "$branch"
               fi
             done <<< "$branches"
+          }
+
+          function fzf-git-worktree() {
+            local main_repo worktree_repo_root repo_info
+            local result query key selected branch wt_path
+            local fzf_default_opts
+
+            repo_info=$(__fzf_gwt_resolve_repo) || {
+              print -u2 "fzf-git-worktree: not in a git repository"
+              return 1
+            }
+            main_repo=$(printf "%s" "$repo_info" | sed -n '1p')
+            worktree_repo_root=$(printf "%s" "$repo_info" | sed -n '2p')
+            mkdir -p "$worktree_repo_root"
 
             fzf_default_opts="$FZF_DEFAULT_OPTS"
             if [[ "$fzf_default_opts" == *"--layout=bottom-up"* ]]; then
               fzf_default_opts="''${fzf_default_opts//--layout=bottom-up/--layout=reverse}"
             fi
 
-            result=$(printf "%s" "$branch_list" | FZF_DEFAULT_OPTS="$fzf_default_opts" fzf --prompt "WORKTREE> " --layout=reverse --delimiter=$'\t' --with-nth=1 --expect=ctrl-n,ctrl-d --print-query --header "Enter: switch | Ctrl-n: new branch | Ctrl-d: delete") || return
+            local _gwt_preview _gwt_delete _gwt_reload
+
+            _gwt_preview="
+              branch=\$(echo {2} | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*\$//');
+              wt_dir=\$(echo \$branch | tr / -);
+              wt_path=$worktree_repo_root/\$wt_dir;
+              if [ -d \$wt_path ]; then
+                printf '\\033[1;34m━━━ Worktree Status ━━━\\033[0m\\n';
+                git -C \$wt_path status --short --branch --color=always 2>/dev/null;
+                echo;
+              fi;
+              printf '\\033[1;34m━━━ Recent Commits ━━━\\033[0m\\n';
+              git -C $main_repo log --oneline --graph --date=short --color=always \
+                --pretty='format:%C(auto)%cd %h%d %s' \$branch -- 2>/dev/null | head -40
+            "
+
+            _gwt_delete="
+              branch=\$(echo {2} | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*\$//');
+              wt_dir=\$(echo \$branch | tr / -);
+              wt_path=$worktree_repo_root/\$wt_dir;
+              [ -d \$wt_path ] && git -C $main_repo worktree remove \$wt_path 2>/dev/null
+            "
+
+            _gwt_reload="
+              git -C $main_repo for-each-ref --format='%(refname:short)' refs/heads refs/remotes/origin \
+              | sed 's#^origin/##' | sort -u | while IFS= read -r b; do
+                [ -z \"\$b\" ] && continue;
+                wp=$worktree_repo_root/\$(echo \$b | tr / -);
+                if [ -d \$wp ]; then
+                  printf '\\033[32m●\\033[0m\\t%-40s\\t\\033[2m%s\\033[0m\\n' \"\$b\" \$wp;
+                else
+                  printf '\\033[90m○\\033[0m\\t%-40s\\t\\n' \"\$b\";
+                fi;
+              done
+            "
+
+            result=$(__fzf_gwt_list "$main_repo" "$worktree_repo_root" \
+              | FZF_DEFAULT_OPTS="$fzf_default_opts" fzf \
+                --ansi \
+                --height 90% \
+                --layout=reverse \
+                --border --border-label ' 🌴 Worktree ' --border-label-pos=2 \
+                --color 'label:green,header:italic:dim' \
+                --prompt 'WORKTREE> ' \
+                --header $'Enter: switch │ Ctrl-N: new branch │ Ctrl-D: delete │ Ctrl-/: toggle preview' \
+                --delimiter=$'\t' \
+                --with-nth=1,2 \
+                --preview "$_gwt_preview" \
+                --preview-window 'right,50%,border-left' \
+                --bind 'ctrl-/:change-preview-window(down,40%|hidden|right,50%)' \
+                --bind 'ctrl-k:up,ctrl-j:down' \
+                --bind "ctrl-d:execute-silent($_gwt_delete)+reload($_gwt_reload)" \
+                --expect=ctrl-n \
+                --print-query \
+            ) || return
 
             query=$(printf "%s\n" "$result" | sed -n '1p')
             key=$(printf "%s\n" "$result" | sed -n '2p')
-            selected=$(printf "%s\n" "$result" | sed -n '3p' | awk -F $'\t' '{print $1}')
+            selected=$(printf "%s\n" "$result" | sed -n '3p' | awk -F $'\t' '{print $2}' | sed 's/^[[:space:]]*//' | sed 's/[[:space:]]*$//')
 
             case "$key" in
               ctrl-n)
@@ -248,27 +314,16 @@
 
             wt_path="$worktree_repo_root/''${branch//\//-}"
 
-            case "$key" in
-              ctrl-d)
-                [[ -d "$wt_path" ]] || return
-                read -q "REPLY?Delete worktree at ''${wt_path}? [y/N] " || return
-                echo
-                [[ "$REPLY" =~ ^[Yy]$ ]] || return
-                git -C "$main_repo" worktree remove "$wt_path"
-                ;;
-              *)
-                if [[ -d "$wt_path" ]]; then
-                  cd "$wt_path"
-                else
-                  if git -C "$main_repo" show-ref --verify --quiet "refs/heads/$branch"; then
-                    git -C "$main_repo" worktree add "$wt_path" "$branch" || return
-                  else
-                    git -C "$main_repo" worktree add -b "$branch" "$wt_path" || return
-                  fi
-                  cd "$wt_path"
-                fi
-                ;;
-            esac
+            if [[ -d "$wt_path" ]]; then
+              cd "$wt_path"
+            else
+              if git -C "$main_repo" show-ref --verify --quiet "refs/heads/$branch"; then
+                git -C "$main_repo" worktree add "$wt_path" "$branch" || return
+              else
+                git -C "$main_repo" worktree add -b "$branch" "$wt_path" || return
+              fi
+              cd "$wt_path"
+            fi
           }
           abbr -S gw="fzf-git-worktree"
 
