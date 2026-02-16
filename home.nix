@@ -138,10 +138,41 @@
           eval "$(zoxide init zsh)"
           eval "$(${pkgs.uv}/bin/uv generate-shell-completion zsh)"
 
-          function peco-ghq () {
-            cd "$( ghq list --full-path | peco --prompt "REPO> " --layout=bottom-up)"
+          function fzf-ghq() {
+            local selected
+            selected=$(ghq list --full-path \
+              | fzf \
+                --ansi \
+                --height 90% \
+                --layout=reverse \
+                --border --border-label ' 📂 Repository ' --border-label-pos=2 \
+                --color 'label:blue,header:italic:dim' \
+                --prompt 'REPO> ' \
+                --header $'Enter: cd │ Ctrl-/: toggle preview' \
+                --preview "
+                  printf '\\033[1;34m━━━ Repository Info ━━━\\033[0m\\n';
+                  git -C {} log --oneline --graph --date=short --color=always \
+                    --pretty='format:%C(auto)%cd %h%d %s' -20 2>/dev/null
+                " \
+                --preview-window 'right,50%,border-left' \
+                --bind 'ctrl-/:change-preview-window(down,40%|hidden|right,50%)' \
+                --bind 'ctrl-k:up,ctrl-j:down' \
+            ) || return
+            [[ -n "$selected" ]] && cd "$selected"
           }
-          abbr -S gp='peco-ghq'
+          abbr -S gp='fzf-ghq'
+
+          function fzf-ghq-widget() {
+            if [[ -n "$WIDGET" ]]; then
+              zle -I
+              fzf-ghq
+              zle reset-prompt
+            else
+              fzf-ghq
+            fi
+          }
+          zle -N fzf-ghq-widget
+          bindkey "^[r" fzf-ghq-widget
 
           function peco-git-switch() {
             local sel branch
