@@ -1,18 +1,12 @@
 layout {
-    tab name="nvim" {
+    tab name="work" focus=true {
         pane size=1 borderless=true {
             plugin location="tab-bar"
         }
-        pane command="nvim"
-        pane size=1 borderless=true {
-            plugin location="status-bar"
+        pane split_direction="vertical" {
+            pane command="opencode" size="30%"
+            pane command="nvim" focus=true size="70%"
         }
-    }
-    tab name="llm" {
-        pane size=1 borderless=true {
-            plugin location="tab-bar"
-        }
-        pane command="opencode"
         pane size=1 borderless=true {
             plugin location="status-bar"
         }
@@ -27,3 +21,4 @@ layout {
         }
     }
 }
+
