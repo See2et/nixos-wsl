@@ -2,5 +2,34 @@
   "$schema": "https://opencode.ai/config.json",
   "keybinds": {
     "variant_cycle": "ctrl+alt+t",
+  },
+  "mcp": {
+    "serena": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "uvx",
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "{cwd}"
+      ],
+      "environment": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    },
+    "context7": {
+      "type": "local",
+      "enabled": true,
+      "command": [
+        "npx",
+        "-y",
+        "@upstash/context7-mcp@latest"
+      ]
+    }
   }
 }
