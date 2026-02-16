@@ -1,0 +1,5 @@
+- Search: `rg -n "pattern" path`
+- Apply system config: `sudo nixos-rebuild switch --flake /etc/nixos#nixos`
+- Apply home config (if using HM directly): `home-manager switch --flake /etc/nixos#nixos`
+- Inspect diff: `git diff -- <file>`
+- List files: `ls`, `find`, `rg --files`

@@ -40,6 +40,8 @@
       tree-sitter
       yt-dlp
       ripgrep
+      wl-clipboard
+      xclip
       ffmpeg
       fzf
       markdownlint-cli2

@@ -1,0 +1,4 @@
+- Purpose: NixOS/Home Manager dotfiles and system configuration for user environment, including Neovim and Zsh.
+- Main files: `configuration.nix`, `home.nix`, `flake.nix`, `nvim/`.
+- Stack: Nix (NixOS modules, Home Manager), Lua for Neovim config.
+- Platform: Linux (NixOS).

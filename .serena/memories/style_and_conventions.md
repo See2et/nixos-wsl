@@ -1,0 +1,4 @@
+- Keep Nix expressions readable with grouped package lists.
+- Prefer declarative package/config changes in `home.nix` and module files.
+- Neovim config is Lua under `nvim/`; keep settings minimal and explicit.
+- Make small focused edits and validate via rebuild/switch commands.
