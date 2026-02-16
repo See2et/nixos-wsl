@@ -24,6 +24,7 @@
       tre-command
       lsd
       nixfmt-rfc-style
+      nixd
       gh
       ghq
       lazygit
