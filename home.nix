@@ -32,6 +32,7 @@
       peco
       zoxide
       nodejs_24
+      bun
       pnpm
       yarn
       deno
@@ -68,6 +69,7 @@
       executable = true;
     };
     ".config/opencode/opencode.jsonc".source = ./opencode/opencode.jsonc;
+    ".config/opencode/oh-my-opencode.jsonc".source = ./opencode/oh-my-opencode.jsonc;
     ".config/opencode/AGENTS.md".source = ./opencode/AGENTS.md;
     ".config/opencode/themes/tokyonight-transparent.json".source =
       ./opencode/themes/tokyonight-transparent.json;
