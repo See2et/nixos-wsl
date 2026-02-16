@@ -184,8 +184,12 @@
             local git_common_dir main_repo ghq_root repo_path worktree_repo_root
             local branches branch branch_list wt_path result query key selected
             local remote_url
+            local fzf_default_opts
 
-            git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || return
+            git_common_dir=$(git rev-parse --git-common-dir 2>/dev/null) || {
+              print -u2 "fzf-git-worktree: not in a git repository"
+              return 1
+            }
 
             if [[ "$git_common_dir" == ".git" ]]; then
               main_repo=$(git rev-parse --show-toplevel 2>/dev/null) || return
@@ -193,12 +197,16 @@
               main_repo="''${git_common_dir%/.git}"
             fi
 
-            ghq_root=$(ghq root 2>/dev/null) || return
-            if [[ "$main_repo" == "$ghq_root/"* ]]; then
+            ghq_root=$(ghq root 2>/dev/null) || ghq_root=""
+            if [[ -n "$ghq_root" && "$main_repo" == "$ghq_root/"* ]]; then
               repo_path="''${main_repo#"$ghq_root/"}"
             else
-              remote_url=$(git -C "$main_repo" remote get-url origin 2>/dev/null) || return
-              repo_path=$(printf "%s" "$remote_url" | sed -E 's#(git@|https://)##; s#:#/#; s#\\.git$##')
+              remote_url=$(git -C "$main_repo" remote get-url origin 2>/dev/null) || remote_url=""
+              if [[ -n "$remote_url" ]]; then
+                repo_path=$(printf "%s" "$remote_url" | sed -E 's#(git@|https://)##; s#:#/#; s#\\.git$##')
+              else
+                repo_path=$(basename "$main_repo")
+              fi
             fi
 
             worktree_repo_root="$HOME/worktrees/$repo_path"
@@ -216,7 +224,12 @@
               fi
             done <<< "$branches"
 
-            result=$(printf "%s" "$branch_list" | fzf --prompt "WORKTREE> " --layout=bottom-up --delimiter=$'\t' --with-nth=1 --expect=ctrl-n,ctrl-d --print-query --header "Enter: switch | Ctrl-n: new branch | Ctrl-d: delete") || return
+            fzf_default_opts="$FZF_DEFAULT_OPTS"
+            if [[ "$fzf_default_opts" == *"--layout=bottom-up"* ]]; then
+              fzf_default_opts="''${fzf_default_opts//--layout=bottom-up/--layout=reverse}"
+            fi
+
+            result=$(printf "%s" "$branch_list" | FZF_DEFAULT_OPTS="$fzf_default_opts" fzf --prompt "WORKTREE> " --layout=reverse --delimiter=$'\t' --with-nth=1 --expect=ctrl-n,ctrl-d --print-query --header "Enter: switch | Ctrl-n: new branch | Ctrl-d: delete") || return
 
             query=$(printf "%s\n" "$result" | sed -n '1p')
             key=$(printf "%s\n" "$result" | sed -n '2p')
@@ -260,9 +273,13 @@
           abbr -S gw="fzf-git-worktree"
 
           function fzf-git-worktree-widget() {
-            zle -I
-            fzf-git-worktree
-            zle reset-prompt
+            if [[ -n "$WIDGET" ]]; then
+              zle -I
+              fzf-git-worktree
+              zle reset-prompt
+            else
+              fzf-git-worktree
+            fi
           }
           zle -N fzf-git-worktree-widget
           bindkey "^[b" fzf-git-worktree-widget
